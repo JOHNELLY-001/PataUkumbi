@@ -33,6 +33,7 @@ class VenueService {
     int limit = 20,
     String? search,
     String? venueType,
+    String? eventType,
     double? minLat,
     double? maxLat,
     double? minLng,
@@ -44,6 +45,7 @@ class VenueService {
         limit: limit,
         search: search,
         venueType: venueType,
+        eventType: eventType,
         minLat: minLat,
         maxLat: maxLat,
         minLng: minLng,
@@ -102,7 +104,7 @@ class VenueService {
   }) async {
     final res = await fetchVenuesPage(
       page: page ?? 1,
-      limit: limit ?? 50,
+      limit: limit ?? 20,
       search: search,
     );
     return res.items;
@@ -113,8 +115,18 @@ class VenueService {
     if (data is List && data.isNotEmpty && data.first is Map) {
       return Map<String, dynamic>.from(data.first as Map);
     }
-    if (data is Map<String, dynamic>) return data;
-    if (data is Map) return Map<String, dynamic>.from(data);
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      // New backend envelope `{data: {...}}` — unwrap it.
+      final inner = map['data'];
+      if (inner is Map) return Map<String, dynamic>.from(inner);
+      // Raw object (legacy) — return as-is if it looks like a venue.
+      if (map.containsKey('id') || map.containsKey('name')) return map;
+      if (map.isNotEmpty && map.values.first is Map) {
+        return Map<String, dynamic>.from(map.values.first as Map);
+      }
+      return map;
+    }
     throw const ApiException('Unexpected venue detail response');
   }
 }
