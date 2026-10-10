@@ -1,0 +1,33 @@
+I haven't seen a new error since the build was still running, so this is the full fix plan for everything so far. Run it in order.
+
+**Step 1: Stop old Gradle processes**
+```
+cd D:\Android\android_projects\e_venues\android
+gradlew --stop
+cd ..
+```
+
+**Step 2: Give Gradle safe memory limits**
+
+Edit `android\gradle.properties` and set these lines (replace any existing `org.gradle.jvmargs`):
+```properties
+org.gradle.jvmargs=-Xmx2G -XX:MaxMetaspaceSize=768m
+kotlin.daemon.jvmargs=-Xmx1G
+org.gradle.parallel=false
+```
+If your PC has under 8 GB of RAM, use `-Xmx1536m` instead of `-Xmx2G`.
+
+**Step 3: Fix the NDK version**
+
+In `android\app\build.gradle.kts`, inside the `android { ... }` block, add:
+```kotlin
+ndkVersion = "28.2.13676358"
+```
+
+**Step 4: Check Kotlin is set**
+
+In `android\settings.gradle.kts`, confirm:
+```kotlin
+id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+```
+This is already working, and moving to 2.3.20 is optional for later.

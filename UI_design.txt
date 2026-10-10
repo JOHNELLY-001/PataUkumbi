@@ -1,0 +1,352 @@
+<!DOCTYPE html><html lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>E-Venues TZ • HAVEN Splash</title>
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "inverse-on-surface": "#f3f0ef",
+            "primary": "#b52330",
+            "outline": "#8e706f",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-high": "#eae7e7",
+            "on-secondary-container": "#007168",
+            "surface-dim": "#dcd9d9",
+            "surface-bright": "#fcf9f8",
+            "on-error-container": "#93000a",
+            "on-primary-container": "#61000e",
+            "on-tertiary-fixed": "#002115",
+            "on-error": "#ffffff",
+            "error-container": "#ffdad6",
+            "tertiary-fixed-dim": "#59ddaa",
+            "on-primary": "#ffffff",
+            "error": "#ba1a1a",
+            "on-secondary-fixed-variant": "#005049",
+            "on-tertiary": "#ffffff",
+            "tertiary-container": "#00a879",
+            "on-background": "#1b1c1c",
+            "secondary-fixed-dim": "#5bdacc",
+            "surface": "#fcf9f8",
+            "on-surface": "#1b1c1c",
+            "primary-container": "#ff5a5f",
+            "outline-variant": "#e2bebc",
+            "secondary-fixed": "#7af7e8",
+            "on-tertiary-container": "#003423",
+            "on-primary-fixed-variant": "#92001b",
+            "on-secondary": "#ffffff",
+            "inverse-primary": "#ffb3b0",
+            "surface-container-low": "#f6f3f2",
+            "surface-tint": "#b52330",
+            "primary-fixed": "#ffdad8",
+            "on-secondary-fixed": "#00201d",
+            "on-tertiary-fixed-variant": "#005139",
+            "secondary": "#006a62",
+            "inverse-surface": "#303030",
+            "primary-fixed-dim": "#ffb3b0",
+            "secondary-container": "#7af7e8",
+            "surface-variant": "#e5e2e1",
+            "tertiary": "#006c4c",
+            "surface-container": "#f0eded",
+            "on-surface-variant": "#5a403f",
+            "on-primary-fixed": "#410007",
+            "background": "#fcf9f8",
+            "surface-container-highest": "#e5e2e1",
+            "tertiary-fixed": "#78fac4"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-tablet": "1.5rem",
+            "space-2xl": "3rem",
+            "margin-desktop": "2.5rem",
+            "gutter": "1rem",
+            "space-2xs": "0.25rem",
+            "space-md": "1rem",
+            "gutter-desktop": "1.5rem",
+            "space-xs": "0.5rem",
+            "margin": "1rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.75rem",
+            "space-xl": "2rem"
+          },
+          "fontFamily": {
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "body-lg": ["Plus Jakarta Sans"],
+            "body-sm": ["Plus Jakarta Sans"],
+            "body-md": ["Plus Jakarta Sans"],
+            "label-lg": ["Plus Jakarta Sans"],
+            "label-md": ["Plus Jakarta Sans"],
+            "display-lg": ["Plus Jakarta Sans"],
+            "display-lg-mobile": ["Plus Jakarta Sans"],
+            "label-sm": ["Plus Jakarta Sans"],
+            "price-tag": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "headline-lg": ["28px", { "lineHeight": "34px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "28px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "display-lg": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "display-lg-mobile": ["30px", { "lineHeight": "36px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+            "price-tag": ["14px", { "lineHeight": "18px", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    /* Custom Kinetic Micro-Animations */
+    @keyframes logoEntrance {
+      0% {
+        opacity: 0;
+        transform: scale(0.88) translateY(18px);
+        filter: blur(8px);
+      }
+      70% {
+        transform: scale(1.03) translateY(-2px);
+        filter: blur(0px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @keyframes softFloat {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-5px);
+      }
+    }
+
+    @keyframes textSlideUp {
+      0% {
+        opacity: 0;
+        transform: translateY(14px);
+        filter: blur(4px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+        filter: blur(0);
+      }
+    }
+
+    @keyframes wordFadeUp {
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+        letter-spacing: 0.04em;
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+        letter-spacing: 0em;
+      }
+    }
+
+    @keyframes progressTrack {
+      0% {
+        transform: translateX(-100%);
+      }
+      50% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+
+    @keyframes ambientGlow {
+      0%, 100% {
+        opacity: 0.45;
+        transform: scale(0.96);
+      }
+      50% {
+        opacity: 0.75;
+        transform: scale(1.08);
+      }
+    }
+
+    .anim-logo-badge {
+      animation: logoEntrance 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .anim-float {
+      animation: softFloat 4.5s ease-in-out infinite 1.2s;
+    }
+
+    .anim-glow {
+      animation: ambientGlow 5s ease-in-out infinite alternate;
+    }
+
+    .anim-brand-text {
+      animation: textSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 0.35s;
+      opacity: 0;
+    }
+
+    .anim-slogan {
+      animation: textSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 0.6s;
+      opacity: 0;
+    }
+
+    .word-chip {
+      display: inline-block;
+      opacity: 0;
+      animation: wordFadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .word-1 { animation-delay: 0.75s; }
+    .word-2 { animation-delay: 0.88s; }
+    .word-3 { animation-delay: 1.01s; }
+    .word-4 { animation-delay: 1.14s; }
+    .word-5 { animation-delay: 1.27s; }
+    .word-6 { animation-delay: 1.40s; }
+
+    .anim-progress-bar {
+      animation: progressTrack 2s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+    }
+
+    .anim-footer {
+      animation: textSlideUp 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation-delay: 1.2s;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased selection:bg-primary-container selection:text-surface-container-lowest min-h-screen flex items-center justify-center p-0 md:p-6 overflow-hidden">
+<!-- Mobile Frame Container (Simulating Flutter Mobile Phone Viewport) -->
+<main class="relative w-full max-w-[412px] h-screen md:h-[844px] md:max-h-[92vh] bg-surface flex flex-col justify-between items-center px-margin pt-12 pb-8 overflow-hidden md:rounded-[36px] md:border md:border-outline-variant/30 md:shadow-[0_16px_40px_rgba(0,0,0,0.08)]" id="splash-stage">
+<!-- Ambient Depth Background Blurs (Coastal Coral & Warm Sun) -->
+<div class="pointer-events-none absolute -top-24 -left-20 w-72 h-72 rounded-full bg-primary-fixed/30 blur-[80px] anim-glow"></div>
+<div class="pointer-events-none absolute top-1/3 -right-24 w-80 h-80 rounded-full bg-primary-container/10 blur-[90px] anim-glow" style="animation-delay: 2s;"></div>
+<div class="pointer-events-none absolute bottom-12 left-1/2 -translate-x-1/2 w-64 h-32 rounded-full bg-secondary-fixed/15 blur-[60px]"></div>
+<!-- Top Status Bar & Interactive Replay Button -->
+<header class="w-full flex items-center justify-between z-20">
+<!-- Minimal Brand Anchor Tag -->
+<div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-lowest border border-outline-variant/30 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container animate-ping"></span>
+<span class="w-1.5 h-1.5 -ml-2 rounded-full bg-primary-container"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant tracking-wider uppercase">Dar Discovery</span>
+</div>
+<!-- Interactive Tap-to-Replay Button -->
+<button aria-label="Replay animation" class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-surface-container-low hover:bg-surface-container border border-outline-variant/20 text-on-surface-variant text-label-sm font-label-sm transition-all duration-200 active:scale-95 group" id="replay-btn">
+<span class="material-symbols-outlined text-[16px] group-hover:rotate-180 transition-transform duration-500" data-icon="refresh">refresh</span>
+<span class="text-label-sm">Replay</span>
+</button>
+</header>
+<!-- Center Stage: Logo, Brand Kinetic Typography & Tagline -->
+<section class="w-full flex flex-col items-center justify-center my-auto z-10 text-center">
+<!-- Logo Container with Ambient Glow and Tactile Elevation -->
+<div class="relative flex items-center justify-center mb-7 anim-float">
+<!-- Diffuse Soft Backlight -->
+<div class="absolute inset-0 bg-primary-container/20 rounded-full blur-2xl transform scale-125 pointer-events-none"></div>
+<!-- Premium Visual Container for Brand Mark -->
+<div class="anim-logo-badge relative w-28 h-28 sm:w-32 sm:h-32 rounded-[28px] bg-surface-container-lowest p-3 shadow-[0_12px_32px_rgba(255,90,95,0.14)] border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+<img alt="E-Venues TZ HAVEN Brand Logo" class="w-full h-full object-cover rounded-[20px]" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRxdKG9c1TqddKhznbB7UD3UjHyXcxPMXmg7PMSpytEEokhUMdi8HbHMBsoCO8GU6cC8TF70FOgDDw3yMc6XlzdXwEz6ab7RNyhieC4EP6QUHCRYvwZ91zQdU1tG3R5JQAtJVPgAt12Lt3qtFj0eKJY0V-Uu26pl3pkMsBCSznrnsQv4CvjOuk3rhLz2SlJaCcAouK0XoJ4pNgW7tdrJHSTqcwVpt7AiGzG_S0Qzi6HFSXWkRwAdUfvshCqhdRNPp9fA">
+</div>
+</div>
+<!-- Brand Identity Cluster -->
+<div class="space-y-1.5 max-w-[320px]">
+<!-- Top Pill Sub-mark -->
+<div class="anim-brand-text flex items-center justify-center gap-1.5">
+
+<span class="text-outline-variant text-label-sm font-bold">•</span>
+
+</div>
+<!-- Hero Brand Typography -->
+<h1 class="anim-brand-text font-display-lg-mobile text-display-lg-mobile text-on-surface tracking-tight mt-1">
+          HAVEN
+        </h1>
+<!-- Staggered Kinetic Tagline -->
+<p class="anim-slogan text-body-md font-body-md text-on-surface-variant/90 pt-1.5 flex flex-wrap justify-center items-center gap-x-1.5 leading-relaxed">
+<span class="word-chip word-1">Find</span>
+<span class="word-chip word-2">your</span>
+<span class="word-chip word-3 text-primary-container font-semibold">place</span>
+<span class="word-chip word-4">for</span>
+<span class="word-chip word-5">every</span>
+<span class="word-chip word-6 font-medium">moment.</span>
+</p>
+</div>
+<!-- Feature Pill Badges Preview -->
+<div class="anim-footer flex items-center justify-center gap-2 mt-6">
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface-variant text-label-sm font-label-sm border border-outline-variant/30 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-primary" data-icon="celebration">celebration</span>
+          Weddings
+        </span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface-variant text-label-sm font-label-sm border border-outline-variant/30 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-secondary" data-icon="business_center">business_center</span>
+          Corporate
+        </span>
+<span class="px-2.5 py-1 rounded-full bg-surface-container-low text-on-surface-variant text-label-sm font-label-sm border border-outline-variant/30 flex items-center gap-1">
+<span class="material-symbols-outlined text-[13px] text-tertiary" data-icon="beach_access">beach_access</span>
+          Coastal
+        </span>
+</div>
+</section>
+<!-- Bottom Stage: Minimal Linear Loading Bar & Metadata -->
+<footer class="w-full flex flex-col items-center z-10 space-y-4">
+<!-- Minimalist Flutter Style Linear Progress Indicator -->
+<div class="w-44 h-[3px] bg-surface-container-high rounded-full overflow-hidden relative shadow-inner">
+<div class="h-full bg-primary-container rounded-full anim-progress-bar w-1/2"></div>
+</div>
+<!-- Geographic & System Version Metadata -->
+<div class="anim-footer flex flex-col items-center text-center space-y-0.5">
+<p class="text-label-sm font-label-sm text-on-surface-variant font-medium tracking-wide">
+          Dar es Salaam, Tanzania • v1.0
+        </p>
+<p class="text-[10px] text-outline font-body-sm">
+          Masaki • CBD • Oysterbay • Kigamboni
+        </p>
+</div>
+</footer>
+</main>
+<!-- Interactive Replay Logic -->
+<script>
+    const replayBtn = document.getElementById('replay-btn');
+    const stage = document.getElementById('splash-stage');
+
+    replayBtn.addEventListener('click', () => {
+      // Re-trigger CSS keyframe animations smoothly
+      const animatedElements = stage.querySelectorAll('[class*="anim-"], .word-chip');
+      animatedElements.forEach(el => {
+        const currentStyle = el.style.animation;
+        el.style.animation = 'none';
+        void el.offsetWidth; // Force DOM Reflow
+        el.style.animation = '';
+      });
+    });
+  </script>
+
+
+</body></html>

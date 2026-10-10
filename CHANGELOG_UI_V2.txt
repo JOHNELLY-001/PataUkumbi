@@ -1,0 +1,483 @@
+E-VENUES TZ — UI v2 CHANGELOG (redesign/ui-v2 branch)
+=======================================================
+
+PHASES 0 + 1 — DONE
+Validated: `flutter analyze` = No issues found.
+Validated: `flutter build appbundle --release` = app-release.aab, 52.6 MB.
+(No baseline release existed; previous debug APK was 276.5 MB, but
+debug-vs-release is not apples-to-apples. Real wins: bundled images
+130 MB -> 0.3 MB, MaterialIcons font tree-shaken 1.6 MB -> 6.5 KB,
+R8 + AOT enabled by the release build.)
+
+Phase 0 — hygiene
+- Branch redesign/ui-v2 created (from main + working tree).
+- Assets: 3 onboarding JPGs (up to 6000 px, 46 MB) converted to
+  1080 px WebP q80 (285 KB total). 10 unreferenced photos + unused
+  map_style.json deleted (recoverable from main). pubspec asset list
+  updated; onboarding_screen.dart points at .webp.
+- Fonts: Inter 400/500/600/700 bundled (assets/fonts, ~1 MB),
+  registered in pubspec. Theme uses fontFamily 'Inter'.
+  google_fonts dependency REMOVED (no runtime download anymore).
+- Auth token moved SharedPreferences -> flutter_secure_storage 11.2.0
+  (KeyStore/Keychain), with one-time migration of existing tokens.
+  Splash routing in main.dart reads the new store (prefs fallback).
+- Screenshots deferred: no Android device/emulator attached to this
+  machine (only Windows desktop + Edge). Capture baselines on-device
+  before Phase 2 visual review.
+
+Phase 1 — design system
+- theme/tokens.dart rewritten: blue #1D4ED8 + slate palette (WCAG AA),
+  semantic names (primary/bg/surface/ink/...), type scale 28-12,
+  shadows, dark-mode-ready structure. Old names coral/coralDark/
+  bgSecondary removed; all screens migrated (hearts use #E11D48).
+- theme/app_theme.dart rewritten: Inter, blue focus borders, error
+  #B91C1C, cardTheme added, textButton now primary-colored.
+- lib/ui/ created: AppButton (primary/secondary/ghost+loading),
+  AppCard, AppChip (blue-tint selected), SectionHeader, PriceText
+  (+ static compact() formatter), StatusBadge, SkeletonBox (shimmer),
+  EmptyState, AppSnack, AppIcons mapping, ui.dart barrel.
+- '/ui-gallery' dev route added (main.dart) rendering every component
+  + the full icon set. REMOVE before store release.
+- Analyzer fully clean: also fixed pre-existing infos (deprecated
+  setMapStyle/fromBytes/Color.value, SplashScreen key, renamed
+  venuePageDetails.dart -> venue_page_details.dart + 2 imports).
+
+DEVIATIONS FROM UI_design.txt (deliberate)
+1. phosphor_flutter NOT adopted: v2.1.0 (latest published) cannot
+   compile on Flutter 3.47 — it subclasses IconData, now final.
+   AppIcons maps to Material rounded/outlined instead; swapping the
+   backing set later is still a one-file change. Revisit if phosphor
+   ships v3. url_launcher / share_plus / table_calendar NOT added yet
+   (needed by Phases 4-6; adding unused native plugins now only slows
+   this 3.88 GB machine's builds).
+2. Release validation = `flutter build appbundle` instead of
+   `--split-per-abi APK`: splits conflict with the ndk.abiFilters
+   guard (arm64-v8a+x86_64) that keeps debug builds alive on this
+   machine. AAB is the Play-correct artifact anyway.
+
+NEXT (Phase 2): restyle bottom nav, splash, onboarding overlay,
+AuthShell; adopt AppButton/EmptyState/AppSnack in auth screens.
+
+-------------------------------------------------------
+PHASE 2 — Shell, splash, onboarding, auth — DONE
+Validated: `flutter analyze` = No issues found.
+(No rebuild: changes are Dart UI only; toolchain already proven by
+the Phase 1 release bundle. No device attached for screenshots.)
+
+- Bottom nav (home_chrome.dart): active tab now gets an animated
+  blue-tint pill behind the filled blue icon (200 ms); idle stays
+  gray outline. Labels unchanged.
+- Splash (main.dart): brand title switched coral -> ink 28/800;
+  blue pin + blue progress unchanged on the new slate bg.
+- Onboarding: full-bleed photos with bottom gradient scrim, white
+  28/800 titles + white subtitles overlaid, white/white38 dot pills,
+  full-width primary Next/Get-started, top-right white Skip.
+- AuthShell: title 28/700, form wrapped in white AppCard on slate.
+- Login/register: AutovalidateMode.onUserInteraction on both forms;
+  AppButton with built-in loading replaces hand-rolled spinners;
+  errors go through AppSnack with friendlyAuthError() mapping
+  (401/404/409-422/5xx -> plain language; unknown -> raw message).
+  Register adds a live password checklist (6+ chars flips
+  grey -> green) via a controller listener. Switch-account links
+  now primary-blue.
+- Generic catch-alls no longer leak `$e` internals to users.
+
+-------------------------------------------------------
+PHASE 3 — Explore — DONE
+Validated: `flutter analyze` = No issues found. Server pagination
+code (fetchVenuesPage/loadMore/refresh) untouched.
+Scroll profiling deferred: no Android device attached; perf hygiene
+kept (RepaintBoundary, memCacheWidth caps, gallery max 4 photos).
+
+- Backend probe: catalog holds 1 venue ("grand rolay", event_hall,
+  500 cap); venue_type=Halls and even venue_type=event_hall return 0,
+  so server type filters are unreliable. Old space-type chips
+  (All/Halls/Gardens/...) REMOVED — selecting them emptied the list.
+- Event chips (Any event/Weddings/Conferences/Corporate/Parties/
+  Birthdays/Graduations/Workshops) are frontend intent state only
+  (VenueProvider.eventType); they do NOT alter the server query until
+  the backend gains an event dimension. Selection is visible in the
+  filter summary bar + sheet and will feed the Phase 5 draft.
+- Filter sheet (filter_sheet.dart): event chips, event date picker,
+  guests stepper (1-500), live "N venues" count from provider.total,
+  Reset, "Show N venues" close button.
+- Explore header: search pill (submit saves to recents) + blue
+  summary bar (event - date - guests, opens sheet) + event chips +
+  recent-search chips (max 6, shown when query empty) + Recently
+  viewed horizontal section (max 10, resolved against loaded items).
+- Venue Card v2 (venue_tile.dart, same widget name): 4:3 swipeable
+  gallery (cover + 3) with worm dots, heart, capacity-fit badge
+  ("Fits N guests" green / dim + "Too small" red when guests set),
+  PriceText with /hour /day suffix, shimmer photo placeholders.
+- List states: skeleton cards on first load; EmptyState for error
+  (Retry) and empty results. Price labels unified to "TSh".
+- ViewedHistory (local_history.dart): views recorded from list +
+  map card; surfaced via provider.recentlyViewed.
+- Horizontal "popular/curated" sections skipped: need backend
+  curation flags; recently-viewed covers the pattern.
+
+-------------------------------------------------------
+PHASE 4 — Venue detail — DONE
+Validated: `flutter analyze` = No issues found. (Dart UI only;
+toolchain proven by the Phase 1 release bundle.)
+New dependency: url_launcher (Call / WhatsApp / directions links).
+
+- Backend probe: detail (/api/fetch/venues/2 — id 2, not 1) has NO
+  phone/WhatsApp/landmark fields; HAS restrictions_policies
+  ("above 18 years"), facilities as comma text, gallery as
+  SPACE-separated URLs (was rendering as one broken image — fixed).
+- Model (venue.dart): phone/whatsapp/landmark/restrictions with ''
+  defaults (+ alternate key spellings); goodFor heuristic tiers by
+  capacity (+Workshops on wifi) until backend sends event types;
+  gallery parser splits whitespace and drops non-http entries.
+- Gallery hero: swipeable PageView + worm dots; tap opens
+  fullscreen viewer (pinch zoom 1-4x, counter, close). Thumbnail
+  strip opens the viewer at the tapped index.
+- Quick-facts strip (capacity/space/parking/hours, 23:00 trimmed),
+  "Good for" chips (tap sets the Explore event filter + confirms),
+  About unchanged, Amenities grid with Show all N/less toggle,
+  Policies card (hidden when backend sends nothing).
+- Location: lite-mode mini-map (Android/iOS only; address + button
+  elsewhere) + Get directions (Google Maps dir URL, url_launcher).
+- Host card: avatar + Call / WhatsApp buttons (wa.me with prefilled
+  greeting) when a number exists; otherwise an honest "coming soon"
+  note — lights up automatically once the backend sends phone.
+- Sticky bar: estimate + live context from Explore filters
+  ("per event · 150 guests · Fri, 12 Jun"); button renamed Reserve
+  -> "Check availability" (opens the existing booking sheet).
+
+-------------------------------------------------------
+PHASE 5 — Booking flow — DONE
+Validated: `flutter analyze` = No issues found. (Dart UI only;
+toolchain proven by the Phase 1 release bundle.)
+New dependency: none (url_launcher came with Phase 4).
+
+- lib/booking/booking_repository.dart: BookingRepository interface
+  + LocalBookingRepository (SharedPreferences JSON, no payment) +
+  ApiBookingRepository stub (throws until backend ships endpoint).
+  Booking gains status/eventType/slot/requirements/notes/contact/
+  deposit; fromJson defaults keep pre-Phase-5 bookings readable.
+  DraftStore auto-saves mid-flow drafts per venue.
+- lib/booking/booking_flow_page.dart: 4 steps with progress bar —
+  1 Event details (type chips prefilled from Explore, date RANGE
+  with locally-booked dates greyed out, Full day/Morning/Afternoon/
+  Evening slots, guests capped by venue capacity), 2 Requirements
+  (catering/décor/sound/setup + free-text notes), 3 Review
+  (recap, per-slot breakdown, 12% service fee, 30% deposit est.,
+  contact name/phone validation), 4 Confirmation (status timeline
+  Requested -> Host review -> Confirmed, booking ref, View/Done).
+- Pricing: nightly/cleaning lines REMOVED. Full day -> per-day
+  (fallback hourly×8); partial slots -> hourly×slot-hours (fallback
+  half-day rate); missing rates -> honest "To confirm with host".
+  All computed figures labeled estimated; host confirms final price.
+- Language: "Request to book" everywhere; local status is always
+  'requested', never 'confirmed'.
+- BookingProvider is now a thin reactive layer over the repository
+  (+ bookedRangesFor); same public API, screens untouched.
+- Detail "Check availability" pushes the flow page; old
+  BookingSheet deleted (was its only caller).
+- Bookings list shows no status chips yet — Phase 6 adds status
+  chips + Upcoming/Past filters there.
+
+-------------------------------------------------------
+PHASE 6 — Map, Saved, Bookings, Profile — DONE
+Validated: `flutter analyze` = No issues found. (Dart UI only;
+toolchain proven by the Phase 1 release bundle.)
+
+- Map pills: tapped marker turns blue fill + white text while its
+  sheet is open, then restores (reuses the marker color cache).
+- Carousel refreshed (map_overlay_card.dart): PriceText pricing,
+  removed dead accent param, compare checkbox on each card.
+- Compare mode: select up to 3 (4th explains the limit), dark
+  "Compare (n)" bar docks above the carousel, sheet shows a
+  side-by-side table (photo, type, capacity, per day/hour, area,
+  parking) with per-column View buttons.
+- Saved: custom empty widget replaced by shared EmptyState
+  (tinted icon, same copy).
+- Bookings: Upcoming/Past filter chips with counts, StatusBadge
+  per card (Requested amber; Confirmed/Cancelled ready for the API),
+  event type + slot line when present, cancel hidden on Past.
+- Profile: grouped cards (tinted avatar header + divided menu with
+  count pills), subtler chevrons.
+
+-------------------------------------------------------
+PHASE 7 — Motion, accessibility, QA — DONE (code half)
+Validated: `flutter analyze` = No issues found.
+Device-dependent checks below are OPEN — no Android device is
+attached to this machine. The app owner must run the QA checklist
+on a real low-end device before release.
+
+- Motion: FavoriteButton (elastic scale bounce on toggle, 48dp hit
+  area, Save/Remove semantics) adopted in Explore tiles + detail
+  header. Explore list staggers new items (220 ms fade + 12 px rise,
+  once per venue id; refreshes don't replay). Hero flights restored
+  with unique tags per tab (explore-/saved-/viewed-/map-id) — the
+  old shared-tag IndexedStack crash can't recur; detail flies page 0
+  only, other pages fade. Sheets keep Material 3 default motion.
+- Accessibility: Semantics/tooltips on icon-only controls (nav tabs
+  with selected state, hearts, compare checkbox, filter bar, search
+  clear, steppers, password toggles, viewer close, detail back).
+  Hearts bumped to 48dp targets; carousel raised 128 -> 140 for
+  large-text headroom (all body text already maxLines+ellipsis).
+- Contrast audit (computed WCAG ratios, all AA or better):
+  primary/white 6.7, ink/bg 17.1, secondary/white 7.6,
+  tertiary/white 4.8, primary/tint 6.2, success/warning/error badges
+  4.6/4.5/5.3, heart/white 4.7. EXCEPTION: star/white 2.15 FAIL —
+  star token documented + restricted to tinted surfaces only.
+- NOTE: project_summary.txt still describes the v1 (coral) design;
+  it needs a v2 refresh pass before sharing with reviewers.
+
+-------------------------------------------------------
+BACKEND FIT ROUND — DONE (app + backend, same session)
+Backend repo: D:\Inbox_me\PROJECTS\Development_env\Event-Halls\backend
+NOT YET DEPLOYED: backend changes are uncommitted; push the backend
+repo to deploy on Vercel. Until then the app talks to OLD prod code
+(new endpoints 404 there — ApiClient surfaces friendly errors).
+
+Backend changes (all node --check clean):
+- migrations_002_venue_contact_booking.sql: phone, whatsapp,
+  landmark, event_types JSONB, deposit_percent INT(0-100, def 30).
+  APPLIED to prod Neon (idempotent, verified columns present).
+- migrations_003_bookings.sql: bookings table (full-day/partial
+  slot CHECKs, requested/approved/declined/cancelled, overlap-safe
+  by query). APPLIED, table verified.
+- taxonomy.js: canonical EVENT_TYPES + BOOKING_SLOTS + SLOT_HOURS
+  (mirrors the app exactly).
+- venue reads: new columns flow through SELECT *; ?event_type=
+  JSONB tag filter; district wrapped in %LIKE% (partial areas now
+  match); register/PATCH accept + validate the new fields.
+- bookings API (all contract-tested locally, then cleaned):
+  POST /api/bookings 201 {requested, server totals} / 409 overlap
+  / 400 validation; GET /api/bookings/mine?filter= (401 without
+  token); PATCH /:id/cancel (owner, requested-only);
+  GET /api/bookings/host + PATCH /:id/status (owner/admin);
+  GET /api/fetch/venues/:id/availability (public, s-maxage 60).
+  Contract proof: Morning slot 145x4=580 -> total 649.6, deposit
+  194.88 (30%); duplicate POST -> 409; availability listed the
+  block; test row deleted after (bookings count back to 0).
+  One bug found+fixed in testing: JSONB requirements needs
+  JSON.stringify (was 500).
+- JWT 2h -> 7d (token.js one-liner).
+
+Frontend fit (flutter analyze clean, 12/12 tests pass):
+- friendlyAuthError remapped to backend truth (400 Wrong password,
+  404 unknown, 400 Email already used, 429, 401 expired).
+- 401 interceptor: authed 401s logout + route to /login once
+  (navigatorKey; login/register's own 400/404 never trigger it).
+- Login profile persisted: Profile shows the real name; booking
+  contact fields prefill (draft still wins).
+- Cloudinary f_auto,q_auto,w_{300-1600} on all 10 image sites.
+- Map refetches with padded viewport bbox on camera idle.
+- Event chips now filter server-side (?event_type=); 'Any event'
+  default unchanged. NOTE: live venues are untagged so explicit
+  chips return empty until admin tags via PATCH venues/:id
+  {event_types:[...]}. Empty state already guides to clear filters.
+- ApiBookingRepository is LIVE (snake_case mapping, tolerant
+  numbers); provider syncs (ProxyProvider on auth): login pushes
+  unsynced local requests then reads server truth; logout restores
+  local. Local cancel now marks cancelled (stays in Past).
+- Flow merges server availability (full-day or all-slots-taken
+  greys the day), uses deposit_percent in the deposit line,
+  prefills contacts. Venue.goodFor prefers backend tags.
+- CORRECTION to Phase 3 notes: server search/venue_type filters
+  were never broken (earlier probe was a scripting artifact);
+  only district needed the LIKE fix, now done server-side.
+
+ADMIN TASKS (backend owner, needs login as venue owner):
+[ ] Tag venues: PATCH /api/fetch/venues/2 {event_types:["Weddings",
+    "Conferences",...], phone, whatsapp, landmark, deposit_percent}
+[ ] Commit + push backend repo (Vercel deploys); rerun the 4 curl
+    contract checks against prod afterwards
+[ ] Add more venues — catalog still holds exactly 1
+
+-------------------------------------------------------
+COASTAL HAVEN RESKIN (UI_design.txt) — DONE
+Scope per request: theme + Explore listing design only. All data
+logic untouched (providers, pagination, filters, booking flow).
+Validated: `flutter analyze` clean, 12/12 tests pass.
+
+- Fonts: Plus Jakarta Sans 400/500/600/700/800 bundled
+  (expo-google-fonts TTFs, verified magic bytes); Inter removed;
+  theme fontFamily switched.
+- tokens.dart rewritten to the Coastal palette: coral primary
+  #FF5A5F (+deep #B52330, tint #FFDAD8), warm bg #FCF9F8, ink
+  #1B1C1C / #5A403F / #8E706F, border #E5E2E1, teal secondary
+  #006A62, success #006C4C, error #BA1A1A; buttons 48px; spec
+  shadows. Auth/nav/sheets/flows recolor automatically.
+- AppChip restyled to spec (36px pill, dark active, emoji slot).
+- Explore header: two-line search pill (coral icon disc + inline
+  field + tune button opening the filter sheet); blue summary bar
+  removed; emoji event chips (All ✨ default); "Featured Spots in
+  Dar" + live "{total} available" counter; floating Map View
+  capsule switching to the Map tab.
+- VenueTile is now the Coastal card: white 16px card, 16:10
+  swipe gallery, capacity pill overlay, fit badge top-left,
+  circled bounce heart, pin location row, divider, price +
+  Quick Reserve (opens the 4-step booking flow, not a new sheet).
+- Bottom nav: Saved tab shows the live favorites count badge.
+- Deliberate omissions (no backend data exists): Verified badge
+  and numeric rating are NOT rendered (nothing faked). The HTML
+  quick-reserve sheet was not rebuilt — Quick Reserve reuses the
+  superior Phase 5 flow. Map tab, Saved, Bookings, Profile, detail,
+  auth flows unchanged except theme colors.
+
+-------------------------------------------------------
+MAP VIEW RESTYLE (UI_design.txt Map spec) — DONE
+Scope per request: only necessary visual adjustments; all map
+logic untouched (viewport fetch, clustering, selection, compare,
+fallback list, detail/bootom-card flows).
+Validated: `flutter analyze` clean.
+
+- Markers: selected pill is now spec-style (white pill, thicker
+  coral border, coral glow ring + dot) instead of coral fill;
+  clusters are white circles with dark 2px border + bold count
+  (new createClusterMarker; shared bounded cache).
+- Search pill: h-56 spec capsule, coral search icon, tune button
+  opening the existing filter sheet; filtering logic unchanged.
+- Floating controls (right): recenter on my location + normal/
+  satellite layers toggle, white circles with semantics.
+- Carousel card is now the Coastal card: 320px white card,
+  110px thumb with compare checkbox + save heart, area/title/
+  capacity rows, coral extrabold price, divider + venue-type /
+  coral View Details bar (pushes the detail page directly;
+  card tap still opens the preview sheet). Carousel raised to
+  190; compare bar repositioned above it.
+- Deliberate omissions (no backend data): Verified badge and
+  numeric rating are NOT rendered (nothing faked). Category
+  chips row not added to the map (would cross-wire Explore
+  filter state); map keeps its own search + tune entry points.
+
+-------------------------------------------------------
+DETAIL PAGE RESTYLE (UI_design.txt detail spec) — DONE
+Scope: design adoption only; all detail logic intact (fetch,
+gallery viewer, booking flow entry, host Call/WhatsApp,
+directions, save, Hero tags). Missing data hardcoded ONLY where
+explicitly allowed, in one labeled block.
+Validated: `flutter analyze` clean, 12/12 tests pass.
+New dependency: share_plus (hero share button).
+
+- Hero 300px: top legibility gradient, back + share + heart
+  floating buttons, live photo counter pill ("n / total"),
+  swipe dots kept, fullscreen viewer untouched.
+- Header: verified-type badge + ward, 28px title, coral-star
+  rating row (HARDCODED 4.9/128 reviews — TODO backend) +
+  location with landmark suffix.
+- Host snippet (avatar, HARDCODED name/meta — TODO backend,
+  chat shortcut into WhatsApp/notice) + 3-col badges
+  (capacity / space type / district, all real data).
+- Amenities are spec cards (coral icon tiles by keyword,
+  2-col grid) with Show-all toggle in the section header.
+- About unchanged; Good-for chips moved beneath it.
+- Gallery strip is 260x170 with "Photo n" caption pills.
+- Policies are spec rows (keyword-tinted icons + bold titles).
+- Location retitled "Where you'll celebrate" (mini-map +
+  directions untouched); contact card unchanged below it.
+- Sticky bar: 22px price, teal availability context line,
+  "Reserve Venue" coral CTA with arrow (same booking flow).
+- Explore cleanup (pre-existing): twice-disabled recents +
+  recently-viewed rows and their helpers removed with unused
+  imports; provider history/recording logic untouched.
+
+-------------------------------------------------------
+PROFILE PAGE RESTYLE (UI_design.txt profile spec) — DONE
+Scope: design adoption only; all profile logic intact (auth
+state, counts, cancel, navigation, share). Missing backend data
+hardcoded ONLY where allowed, in one labeled block.
+Validated: `flutter analyze` clean, 12/12 tests pass.
+New icons: notifications, settings, edit, receipt, wallet,
+hostAdd, help, shieldCheck (all in AppIcons).
+
+- App bar: white surface + notifications/settings shortcuts
+  (honest coming-soon feedback — no such features exist).
+- User card: coral-ring avatar with initials (real name) +
+  verified badge, real name (or Guest explorer), role/rating/
+  member-since HARDCODED with TODO(backend), Edit Profile
+  (coming-soon) + working profile Share, guest Log-in variant.
+- My Bookings preview: History link (-> /bookings), Upcoming/
+  Past segmented toggle with live counts, featured booking card
+  (photo gradient, real status pill, real #EV-XXXX ref, title
+  overlay, date/guests grid, real total + real deposit due,
+  View Booking -> /bookings, Cancel for requested upcoming).
+  Payment badges deliberately NOT faked — deposit shown instead.
+- Account & Settings rows: Saved (real count -> /saved),
+  Payments, Host a Venue + Partner badge, Help, Terms
+  (coming-soon feedback; no dead navigation).
+- Logout button keeps login/logout logic; footer adds the
+  Swahili Venues Network line.
+
+-------------------------------------------------------
+HAVEN REBRAND — DONE
+Validated: `flutter analyze` clean, 12/12 tests pass (widget
+test updated to the new branding).
+
+- Launcher icon: assets/images/haven.png (coral H) resized to
+  all 5 mipmap densities (48-192px) with the white background
+  keyed to transparent for proper launcher masking.
+- App name: Android label e_venues -> Haven; iOS display name
+  E Venues -> Haven; MaterialApp title -> Haven.
+- Splash: coral pin + "E-Venues" replaced by the haven mark
+  (rounded) + "Haven"; haven.png registered in pubspec assets.
+- In-app strings: share copy and profile footer now say Haven.
+  Package imports (package:e_venues) and the API base URL are
+  untouched, as is the applicationId.
+- Note: fully uninstall the old build from the device once —
+  Android caches the old icon/label per install.
+
+-------------------------------------------------------
+ONBOARDING CAROUSEL (UI_design.txt onboarding spec) — DONE
+Scope: design adoption only; precache/skip/finish logic intact.
+Validated: `flutter analyze` clean, 12/12 tests pass.
+
+- Header: haven mark + Haven/Dar es Salaam wordmark, Skip
+  (auto-hidden on the last page to hold layout).
+- Carousel: spec copy for all 3 slides, bottom gradient scrim,
+  location badge pills (building/map/verified icons), 20px
+  radius + hairline border; native swipe kept.
+- Dots are tappable spec pills (24px coral active, grey idle);
+  title/subtitle cross-fade on page change.
+- CTA is 52px coral with Next/arrow → Get Started/celebration;
+  "Already have an account? Log in" forwards (via _finish, so
+  onboarding is still marked seen).
+- Routing change per request: splash sends every logged-out
+  launch to /onboarding (token present -> /home); the old
+  seen-flag branch is gone.
+
+-------------------------------------------------------
+HAVEN SPLASH (UI_design.txt splash spec) — DONE
+Scope: splash restyle only; 1.8s routing logic untouched.
+Validated: `flutter analyze` clean, 12/12 tests pass (boot
+test updated to HAVEN).
+
+- landingpage.png registered in pubspec; logo card frames the
+  H mark via a documented crop window (asset is fixed).
+- Staged entrance: logo scale-overshoot + fade, brand slide-up,
+  per-word tagline stagger (place in coral), feature pills,
+  footer — all controller-free TweenAnimationBuilders.
+- Dar Discovery pill, working Replay button (remounts the
+  kinetic cluster), ambient tint blobs (flat, no blur filters).
+- Slim 176x3 progress bar + Dar es Salaam footer per spec.
+  Infinite float/glow loops omitted (splash lives 1.8s).
+
+-------------------------------------------------------
+RELEASE READINESS ROUND — PARTIALLY DONE
+- Booking _submit now catches ApiException (409/400 shown as-is,
+  offline gets a connection message); draft is kept on failure.
+- /ui-gallery dev route + file removed (no references left).
+- Map card heart + View Details bar were found commented out and
+  restored (third such incident — see note below).
+- Release AAB rebuild BLOCKED: C: drive is critically full (80 MB
+  free; pagefile grew to 5.3 GB under build pressure). Cleared
+  user Temp to 0.75 GB free — still unsafe for an R8 build.
+  NOTE TO OWNER: something is commenting out UI blocks (Explore
+  recents/viewed twice, map card heart/action-bar once). Check
+  for another agent/tool editing lib/ before release.
+
+QA CHECKLIST (needs a real device — not done here):
+[ ] Cold start -> Explore scrolls at 60fps on a mid-range Android
+[ ] System text size 200%: no clipped buttons/badges anywhere
+[ ] TalkBack: nav, hearts, filters, booking steps all labelled
+[ ] Slow 3G: skeletons show, images degrade gracefully, no jank
+[ ] Hero flights tile->detail on every tab; pop mid-gallery swipe
+[ ] Booking flow end-to-end incl. draft restore after process kill
+[ ] Release AAB size re-measured after Phases 2-7 asset/code growth
+[ ] Remove '/ui-gallery' dev route before store upload

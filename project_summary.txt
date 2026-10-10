@@ -1,0 +1,316 @@
+================================================================
+E-VENUES TZ — PROJECT DESIGN SUMMARY
+================================================================
+NOTE (UI v2 redesign, branch redesign/ui-v2): this file describes the
+v1 design (coral #FF5A5F, Plus Jakarta Sans, Material icons). The v2
+system is blue #1D4ED8 + slate, Inter, single AppIcons mapping, and a
+lib/ui/ component library — see CHANGELOG_UI_V2.txt. Refresh this
+summary before sharing it with reviewers.
+Written so a newcomer (non-coder friendly) can understand the whole
+app: what it is, how it is built, and how it looks, moves and feels.
+
+----------------------------------------------------------------
+1. WHAT THE APP IS
+----------------------------------------------------------------
+E-Venues TZ ("Find the perfect spot") is a Flutter mobile app for
+discovering, viewing and booking event venues (wedding halls,
+conference rooms, gardens, rooftops, beaches) in Dar es Salaam,
+Tanzania. Think "Airbnb, but for event venues" — that comparison is
+deliberate: the code comments and layout choices copy Airbnb patterns
+(search pill, filter chips, heart-to-save, map price pills, reserve
+bar, price breakdown with service fee).
+
+User journey:
+  Splash (animated logo, 1.8s) -> Onboarding (3 swipe pages, once)
+  -> Login/Register -> Home with 4 tabs: Explore / Map / Saved /
+  Profile. From Explore or Map the user opens a Venue Detail page and
+  taps "Reserve", which opens a booking bottom-sheet (dates, guests,
+  price breakdown, confirm). Bookings are stored on the device and
+  listed under "My bookings". Hearts (favorites) are stored on the
+  device and listed under "Saved".
+
+----------------------------------------------------------------
+2. ARCHITECTURE (how the code is organized)
+----------------------------------------------------------------
+Pattern: layered app with Provider (ChangeNotifier) state management.
+No BLoC, no Riverpod, no routing package — plain Navigator 1.0 with
+named routes defined in lib/main.dart:
+
+  /onboarding  /login  /register  /home  /saved  /bookings  /profile
+
+Splash decides the first screen from two SharedPreferences flags:
+  - onboarding_seen  -> else go to /onboarding
+  - auth_token       -> else go to /home, otherwise /login
+
+Folder map (all under lib/):
+  main.dart                  App entry, 4 providers, routes, Splash.
+  onboarding_screen.dart     3-page intro carousel.
+  profile_screen.dart        Profile tab (avatar, rows, logout).
+  authentication/            login_screen.dart, register_screen.dart
+                             (thin forms; logic lives in provider).
+  home/                      home_screen.dart = tab shell (IndexedStack
+                             + bottom nav). widgets/ holds the Explore
+                             search bar, filter chips, venue list rows,
+                             map view, map cards and bottom-sheet card.
+  screens/                   saved_screen.dart (wishlist),
+                             bookings_screen.dart (my reservations).
+  widgets/                   Reusable pieces: auth_shell.dart (shared
+                             login/register layout), venue.dart (the
+                             Venue data model + defensive JSON parsing),
+                             venuePageDetails.dart (detail page),
+                             booking_sheet.dart (reserve flow).
+  providers/                 State, one class per concern:
+                             AuthProvider    login/register/logout,
+                                             token persist, loading flag
+                             VenueProvider   paginated venue list,
+                                             search (350 ms debounce),
+                                             type filter, map points
+                             SavedProvider   set of hearted venue ids,
+                                             persisted locally
+                             BookingProvider local booking records,
+                                             add/cancel, persisted JSON
+  services/                  Network + helpers:
+                             api_config.dart endpoint URLs + timeout
+                             api_client.dart thin http wrapper, Bearer
+                                             token header, error mapping
+                             auth_token.dart process-wide token holder
+                             venue_service.dart paged fetch, detail
+                                             fetch, isolate JSON parsing
+                             map_cluster.dart grid clustering for markers
+  theme/                     The whole visual identity (see section 3):
+                             tokens.dart (colors, radii, spacing),
+                             app_theme.dart (Material 3 ThemeData).
+  markers/                   marker_icon.dart — hand-drawn map price
+                             pills rendered on canvas, with cache.
+
+Key data rules a reviewer should know:
+  - Venue list is SERVER-paginated (20 per page, infinite scroll at
+    400 px from bottom); map uses a separate light cache (100 points),
+    so scrolling the list never rebuilds the map.
+  - Search/filter hit the server (debounced), they do not filter
+    locally — except on the Map tab, which filters its own 100.
+  - JSON parsing of venues runs in a background isolate (compute())
+    so big lists don't jank the UI.
+  - The Venue model is defensive: prices like "250,000" or "TSh 250k",
+    booleans as 0/1/"yes", gallery lists stored as text — all cleaned
+    at parse time because the backend is inconsistent.
+  - Backend base URL is https://e-venues.vercel.app (overridable with
+    --dart-define=API_BASE_URL=...). Endpoints: /api/login,
+    /api/register, /api/fetch/venuelist, /api/fetch/venues/:id.
+  - Bookings involve NO payment and NO server write — "Confirm booking"
+    only saves a local record. That is the biggest functional gap.
+
+----------------------------------------------------------------
+3. STYLING / DESIGN SYSTEM
+----------------------------------------------------------------
+Single LIGHT theme only (no dark mode). Material 3
+(ThemeData.light(useMaterial3: true)) customized in
+theme/app_theme.dart, with every color/radius/spacing read from
+theme/tokens.dart — nothing is hardcoded in screens. The file header
+says "Airbnb-grade design tokens".
+
+Look and feel: white cards on white background separated by hairline
+borders (#EBEBEB) and soft shadows; generous corner radii; one brand
+color (coral) reserved for actions that matter (primary buttons,
+active tab, saved hearts, price markers, progress bar). Text is dark
+charcoal, never pure black.
+
+Component styles (from app_theme.dart):
+  - AppBar: white, flat (0 elevation), bold 18 px title.
+  - Text fields: filled white, 12 px radius, gray border; focus turns
+    the border dark-ink 1.5 px; errors use dark coral.
+  - Primary button (ElevatedButton): coral fill, white text, full
+    width, 52 px tall, 12 px radius, bold 16 px label.
+  - TextButton: dark ink, semibold 15 px, underlined.
+  - Chips: light-gray pill, 20 px radius, gray border; selected chip
+    flips to dark ink (used on detail amenity area).
+  - Bottom sheets: white, 24 px top radius, visible drag handle.
+  - Dividers: hairline #EBEBEB.
+
+Spacing scale used everywhere: 4 / 8 / 12 / 16 / 24 / 32.
+Screen side padding is 20–24 px; cards use 16 px radius, buttons
+12 px, chips 20 px.
+
+----------------------------------------------------------------
+4. COLORS (exact tokens from theme/tokens.dart)
+----------------------------------------------------------------
+  Brand / accents
+    coral      #FF5A5F  primary actions, active tab, hearts, markers
+    coralDark  #E04146  error borders, pressed/darker brand
+    success    #008A00  (reserved, rarely used yet)
+    star       #FFB400  (reserved for ratings, rarely used yet)
+  Surfaces (all light)
+    bg           #FFFFFF  page background, cards
+    bgSecondary  #F7F7F7  image placeholders, info banners
+    border       #EBEBEB  hairlines, card borders, input borders
+  Text
+    ink           #222222  headings, primary text, prices
+    inkSecondary  #717171  subtitles, hints, metadata
+    inkTertiary  #B0B0B0  empty-state icons, disabled hints
+
+----------------------------------------------------------------
+5. TYPOGRAPHY
+----------------------------------------------------------------
+One font family everywhere: Plus Jakarta Sans, loaded via the
+google_fonts package (needs internet on first run to fetch; then
+cached). Hierarchy is built from weight + size, all on ink colors:
+
+  - Splash / auth titles: 26 px, weight 800 (ExtraBold), ink or coral
+  - Onboarding titles: 26 px / 800; subtitles 15 px secondary
+  - Venue card name: 15 px / 600; location 13 px secondary;
+    price 14 px / 600 ink
+  - Detail page title: 22 px / 800; section heads ("About this
+    space", "Photos") 17 px / 700
+  - Booking sheet title 20 px / 800; "Total" row 16 px / 800
+  - Bottom-nav labels: 11 px (700 active / 500 idle)
+  - Map marker pills: ~15 px / 800, prefixed "TSh "
+  - Money everywhere is "TSh" compacted: 250000 -> "250k",
+    2000000 -> "2M" (see _short() helpers).
+
+----------------------------------------------------------------
+6. ICONS
+----------------------------------------------------------------
+No custom icon font — 100% Material symbols, mostly the rounded /
+outlined set, which gives the soft friendly look:
+
+  - Brand mark: Icons.place_rounded (map pin) in white inside a coral
+    rounded square (96 px splash, 52 px auth header).
+  - Bottom nav: search_rounded (Explore), map_outlined/map_rounded
+    (Map), favorite_border/favorite_rounded (Saved), person_outline/
+    person_rounded (Profile). Active tab = filled coral icon +
+    bold coral label; idle = gray outline icon.
+  - Search bars: search_rounded prefix, clear_rounded to reset.
+  - Venue rows: favorite heart overlay (white -> coral when saved),
+    people_outline + capacity count, image_not_supported fallback
+    when a photo URL is broken.
+  - Detail page: back arrow + heart floating in white circles over
+    the photo; amenity grid uses people/meeting-room/parking/
+    schedule/check-circle outline icons (max 6, 2-column grid).
+  - Booking: calendar_month, people + plus/minus steppers,
+    chevron_right on rows; bookings list uses cancel_outlined.
+  - Auth: visibility / visibility_off password toggle.
+  - Empty states: oversized (56 px) tertiary-gray icons
+    (favorite_border, calendar_month, cloud_download).
+  - Map: markers are NOT font icons — each price pill is drawn
+    pixel-by-pixel on a canvas (white bubble, 2 px coral border,
+    little tail triangle, dark "TSh 250k" text), bucketed and cached
+    (max 64) so hundreds of venues stay cheap. Clusters show the
+    count ("12") in the same pill style; tapping zooms in.
+
+----------------------------------------------------------------
+7. ANIMATIONS & MOTION
+----------------------------------------------------------------
+Deliberately calm — fades, slides and progress indicators, no flashy
+transitions:
+
+  - Splash: logo pin gently scales 0.85 -> 1.0 on a 1.4 s ping-pong
+    loop (ScaleTransition + easeOut) over a coral-on-white mark,
+    plus a thin LinearProgressIndicator while routing is decided.
+  - Onboarding: full-bleed PageView (350 ms easeOut page slides) over
+    3 large rounded photos; the page dots are AnimatedContainer pills
+    that stretch 8 -> 24 px and flip gray -> ink in 300 ms;
+    Next/Get-started button and Skip.
+  - Detail page: collapsing photo header (SliverAppBar, 300 px,
+    pinned) with back/heart buttons floating over the image; photo
+    gallery is a peek-a-boo PageView (92% viewport) with a worm-style
+    SmoothPageIndicator (ink worm on gray dots).
+  - Venue preview: DraggableScrollableSheet bottom sheet (50% ->
+    92% drag) with photo, price and View button.
+  - Lists: pull-to-refresh (RefreshIndicator), infinite-scroll
+    spinner row, per-card RepaintBoundary so images don't repaint
+    siblings while scrolling; CachedNetworkImage with gray shimmer-
+    style placeholders and graceful error icons.
+  - Forms/dialogs: standard Material motion — date-range picker
+    tinted coral, SnackBars for success/errors ("Booking saved —
+    find it under My bookings" with a View action).
+  - NOTE: there are NO Hero (shared-element) photo transitions even
+    though heroTag fields exist — they were removed on purpose
+    because Explore and Map both stay alive in the IndexedStack with
+    the same tag and the double image decode crashed transitions.
+
+----------------------------------------------------------------
+8. IMAGES & MAP STYLING
+----------------------------------------------------------------
+Bundled assets (assets/, declared in pubspec.yaml):
+  room-used-official-event.jpg, conference-room.jpg, cozy-cafeteria.jpg
+  (the 3 onboarding photos), plus wedding/conference/cafeteria/gaming
+  shots and joel.png / IMG-20241024-WA0018.jpg / PXL_...NIGHT~2.jpg.
+  NOTE: some very large files (conference-room 20 MB, venue-wedding-
+  ceremony 18 MB, gaming shots 17 MB) — worth compressing; they bloat
+  the APK (currently ~276 MB debug).
+Map styles (assets/map_styles/): light_map.json is the active style —
+  a desaturated "daylight" Google map so the white/coral price pills
+  stay readable in sunlight; map_style.json is unused.
+Runtime photos load via cached_network_image with memory caps
+  (memCacheWidth 300–800) so the feed stays smooth.
+
+Map tab design: Google Maps centered on Dar es Salaam (-6.8, 39.28,
+zoom 13), user blue-dot, no zoom buttons, floating white search pill
+on top, horizontal snap carousel of venue cards (280 px white cards:
+110 px photo + name + type + price) docked at the bottom. Markers
+cluster by zoom grid (capped at 150 groups); tapping a cluster zooms
+in. A web/desktop fallback swaps the map for the same search + card
+list with an explanatory banner, because google_maps_flutter cannot
+render there without a JS key.
+
+----------------------------------------------------------------
+9. SCREEN-BY-SCREEN CHEAT SHEET (for the reviewer)
+----------------------------------------------------------------
+  Splash            Coral pin pulse + "E-Venues / Find the perfect
+                    spot" + progress bar. Routes by saved flags.
+  Onboarding        3 full-photo pages (Find venues / See it on the
+                    map / Book with confidence), animated dot pills,
+                    Skip + Next/Get-started. Shown once.
+  Login/Register    Identical AuthShell: coral pin, 26 px title,
+                    stacked rounded fields, full-width coral button
+                    with inline spinner, switch link at bottom.
+                    Register splits "Full name" into first/last for
+                    the backend; TZ phone hint "+255 ...".
+  Explore (tab 1)   Floating white search pill ("Where to
+                    celebrate?") with shadow; horizontal filter chips
+                    (All/Halls/Gardens/Rooftops/Beach/Conference);
+                    infinite photo rows (16:10, heart overlay, name,
+                    type, capacity, ward/district, TSh price).
+  Map (tab 2)       Light map + price pills + bottom card carousel
+                    (or list fallback on web/desktop).
+  Venue detail      Collapsing 300 px photo, floating back/heart,
+                    title + type/area, 2-col amenity grid, About text,
+                    photo strip with worm dots, sticky bottom bar
+                    (price + coral Reserve button).
+  Booking sheet     Dates row (coral-tinted range picker), guests
+                    stepper (capped by venue capacity), price lines
+                    (nightly x N, cleaning Included, 12% service fee),
+                    Total + Confirm (or "Price on request").
+  Saved (tab 3)     Hearted venues as Explore rows; friendly empty
+                    state ("No saved venues yet").
+  Bookings          Local reservations as photo cards with dates,
+                    guests, total and a cancel button; empty state
+                    included. Reachable from tab? No — via Profile
+                    rows and the post-booking snackbar.
+  Profile (tab 4)   Gray avatar circle, "Welcome back/Guest
+                    explorer", live counts on My bookings + Saved
+                    rows, Log in/out, "E-Venues v1.0" footer.
+
+----------------------------------------------------------------
+10. THINGS A REVIEWER MIGHT COMMENT ON (open points)
+----------------------------------------------------------------
+  1. No dark mode — theme is light-only by design; is that OK?
+  2. Booking is local-only (no payment, no server write). Real
+     checkout / M-Pesa / confirmation flow is the biggest missing
+     feature.
+  3. No ratings/reviews UI though a star token (#FFB400) exists.
+  4. APK is ~276 MB debug — the 15–20 MB bundled JPGs should be
+     compressed/converted (WebP) and unused assets removed.
+  5. Google Fonts downloads at runtime — consider bundling the font
+     for offline-first use.
+  6. Bookings screen has no tab; discoverability relies on Profile
+     and the snackbar — should it be a 5th tab?
+  7. iOS folder exists but the build was only verified on Android;
+     map API keys per platform need checking (Android key is in
+     android/local.properties, gitignored — good).
+  8. Accessibility: 11 px nav labels and gray-on-white secondary
+     text are small/low-contrast; tap targets on hearts/steppers
+     could be enlarged.
+================================================================
+END OF SUMMARY
+================================================================
