@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
+import '../ui/ui.dart';
 
-/// Shared white auth layout: coral mark, title, single-column form.
+/// Shared auth layout: brand mark, title, single-column form in a card.
 /// Keeps login/register visually identical with minimal code.
 class AuthShell extends StatelessWidget {
   final String title;
@@ -30,24 +31,24 @@ class AuthShell extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: AppTokens.coral,
+                  color: AppTokens.primary,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Icon(Icons.place_rounded,
+                child: const Icon(AppIcons.brandPin,
                     color: Colors.white, size: 32),
               ),
               const SizedBox(height: 24),
               Text(title,
                   style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
+                      fontSize: AppTokens.t28,
+                      fontWeight: FontWeight.w700,
                       color: AppTokens.ink)),
               const SizedBox(height: 8),
               Text(subtitle,
                   style: const TextStyle(
                       fontSize: 15, color: AppTokens.inkSecondary)),
-              const SizedBox(height: 28),
-              child,
+              const SizedBox(height: 24),
+              AppCard(child: child),
             ],
           ),
         ),

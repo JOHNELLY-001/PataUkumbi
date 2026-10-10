@@ -1,5 +1,6 @@
 import 'package:e_venues/services/api_client.dart';
 import 'package:e_venues/theme/tokens.dart';
+import 'package:e_venues/ui/ui.dart';
 import 'package:e_venues/widgets/auth_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,17 @@ class _RegisterPageState extends State<RegisterPage> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  String _passwordMirror = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(() {
+      if (_passwordMirror != _passwordController.text && mounted) {
+        setState(() => _passwordMirror = _passwordController.text);
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -48,19 +60,15 @@ class _RegisterPageState extends State<RegisterPage> {
         password: _passwordController.text,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Account created. Please log in.')));
+      AppSnack.success(context, 'Account created. Please log in.');
       Navigator.of(context).pushReplacementNamed('/login');
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      AppSnack.error(
+          context, friendlyAuthError(e, isLogin: false));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: $e')),
-      );
+      AppSnack.error(context, 'Something went wrong. Please try again.');
     }
   }
 
@@ -72,6 +80,7 @@ class _RegisterPageState extends State<RegisterPage> {
       subtitle: 'Save venues and book in seconds.',
       child: Form(
         key: _formkey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -87,13 +96,14 @@ class _RegisterPageState extends State<RegisterPage> {
             TextFormField(
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
+              autocorrect: false,
               decoration: const InputDecoration(
                   labelText: 'Email', hintText: 'you@example.com'),
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Email required';
                 if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$')
                     .hasMatch(v.trim())) {
-                  return 'Enter a valid email';
+                  return 'Enter a valid email address';
                 }
                 return null;
               },
@@ -112,39 +122,36 @@ class _RegisterPageState extends State<RegisterPage> {
               controller: _passwordController,
               obscureText: _obscure,
               decoration: InputDecoration(
-                labelText: 'Password (6+ characters)',
+                labelText: 'Password',
+                hintText: '6 or more characters',
                 suffixIcon: IconButton(
+                  tooltip:
+                      _obscure ? 'Show password' : 'Hide password',
                   icon: Icon(_obscure
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined),
+                      ? AppIcons.showPassword
+                      : AppIcons.hidePassword),
                   onPressed: () => setState(() => _obscure = !_obscure),
                 ),
               ),
               validator: (v) {
-                if (v == null || v.trim().isEmpty) {
+                if (v == null || v.isEmpty) {
                   return 'Password required';
                 }
-                if (v.trim().length < 6) {
+                if (v.length < 6) {
                   return 'Password must be at least 6 characters';
                 }
                 return null;
               },
             ),
+            const SizedBox(height: 8),
+            _PasswordRules(password: _passwordMirror),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: isLoading
-                  ? null
-                  : () {
-                      if (_formkey.currentState!.validate()) _signup();
-                    },
-              child: isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
-                    )
-                  : const Text('Sign up'),
+            AppButton(
+              label: 'Sign up',
+              loading: isLoading,
+              onPressed: () {
+                if (_formkey.currentState!.validate()) _signup();
+              },
             ),
             const SizedBox(height: 16),
             Row(
@@ -157,13 +164,50 @@ class _RegisterPageState extends State<RegisterPage> {
                       Navigator.of(context).pushReplacementNamed('/login'),
                   child: const Text('Log in',
                       style: TextStyle(
-                          color: AppTokens.ink,
+                          color: AppTokens.primary,
                           fontWeight: FontWeight.w700)),
                 ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Live password checklist: each rule flips grey -> green as it is met.
+class _PasswordRules extends StatelessWidget {
+  final String password;
+  const _PasswordRules({required this.password});
+
+  @override
+  Widget build(BuildContext context) {
+    return _RuleRow(
+      met: password.length >= 6,
+      label: 'At least 6 characters',
+    );
+  }
+}
+
+class _RuleRow extends StatelessWidget {
+  final bool met;
+  final String label;
+  const _RuleRow({required this.met, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = met ? AppTokens.success : AppTokens.inkTertiary;
+    return Padding(
+      padding: const EdgeInsets.only(top: 4),
+      child: Row(
+        children: [
+          Icon(met ? AppIcons.checkCircle : AppIcons.checkCircle,
+              size: 16, color: color),
+          const SizedBox(width: 6),
+          Text(label,
+              style: TextStyle(fontSize: 12, color: color)),
+        ],
       ),
     );
   }
