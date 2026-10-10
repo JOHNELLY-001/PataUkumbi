@@ -1,28 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'tokens.dart';
 
-/// Single light theme for the whole app (Plus Jakarta Sans + coral).
+/// Coastal Haven theme (bundled Plus Jakarta Sans + coral primary).
 ThemeData buildAppTheme() {
   final base = ThemeData.light(useMaterial3: true);
-  final text = GoogleFonts.plusJakartaSansTextTheme(base.textTheme);
+  final text = base.textTheme.apply(
+    fontFamily: 'Plus Jakarta Sans',
+    bodyColor: AppTokens.ink,
+    displayColor: AppTokens.ink,
+  );
 
   final scheme = ColorScheme.fromSeed(
-    seedColor: AppTokens.coral,
-    primary: AppTokens.coral,
-    secondary: AppTokens.coral,
-    surface: AppTokens.bg,
-    error: AppTokens.coralDark,
+    seedColor: AppTokens.primary,
+    primary: AppTokens.primary,
+    secondary: AppTokens.primary,
+    surface: AppTokens.surface,
+    error: AppTokens.error,
   );
 
   return base.copyWith(
     scaffoldBackgroundColor: AppTokens.bg,
     colorScheme: scheme,
-    textTheme: text.apply(
-      bodyColor: AppTokens.ink,
-      displayColor: AppTokens.ink,
-    ),
+    textTheme: text,
     appBarTheme: AppBarTheme(
       backgroundColor: AppTokens.bg,
       foregroundColor: AppTokens.ink,
@@ -34,10 +34,18 @@ ThemeData buildAppTheme() {
         fontSize: 18,
       ),
     ),
+    cardTheme: CardThemeData(
+      color: AppTokens.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTokens.radiusCard),
+        side: const BorderSide(color: AppTokens.border),
+      ),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: AppTokens.bg,
-      hintStyle: const TextStyle(color: AppTokens.inkSecondary, fontSize: 15),
+      fillColor: AppTokens.surface,
+      hintStyle: const TextStyle(color: AppTokens.inkTertiary, fontSize: 15),
       labelStyle: const TextStyle(color: AppTokens.inkSecondary, fontSize: 14),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       border: OutlineInputBorder(
@@ -50,16 +58,16 @@ ThemeData buildAppTheme() {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusButton),
-        borderSide: const BorderSide(color: AppTokens.ink, width: 1.5),
+        borderSide: const BorderSide(color: AppTokens.ink, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusButton),
-        borderSide: const BorderSide(color: AppTokens.coralDark),
+        borderSide: const BorderSide(color: AppTokens.error),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppTokens.coral,
+        backgroundColor: AppTokens.primary,
         foregroundColor: Colors.white,
         minimumSize: const Size.fromHeight(AppTokens.buttonHeight),
         shape: RoundedRectangleBorder(
@@ -70,15 +78,15 @@ ThemeData buildAppTheme() {
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: AppTokens.ink,
+        foregroundColor: AppTokens.primary,
         textStyle: const TextStyle(
             fontSize: 15, fontWeight: FontWeight.w600,
             decoration: TextDecoration.underline),
       ),
     ),
     chipTheme: base.chipTheme.copyWith(
-      backgroundColor: AppTokens.bgSecondary,
-      selectedColor: AppTokens.ink,
+      backgroundColor: AppTokens.surfaceSecondary,
+      selectedColor: AppTokens.primaryTint,
       labelStyle: const TextStyle(color: AppTokens.ink, fontSize: 13),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusChip),
@@ -86,7 +94,7 @@ ThemeData buildAppTheme() {
       ),
     ),
     bottomSheetTheme: const BottomSheetThemeData(
-      backgroundColor: AppTokens.bg,
+      backgroundColor: AppTokens.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
