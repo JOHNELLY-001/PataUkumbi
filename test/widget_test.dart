@@ -10,7 +10,7 @@ void main() {
     await tester.pumpWidget(const MyApp());
     await tester.pump();
 
-    expect(find.text('E-Venues'), findsOneWidget);
-    expect(find.byIcon(Icons.place_rounded), findsOneWidget);
+    expect(find.text('HAVEN'), findsOneWidget);
+    expect(find.byWidgetPredicate((w) => w is Image), findsOneWidget);
   });
 }
